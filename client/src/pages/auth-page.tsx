@@ -56,7 +56,9 @@ export default function AuthPage() {
                 <form 
                   onSubmit={loginForm.handleSubmit((data) => {
                     loginMutation.mutate(data, {
-                      onSuccess: () => setLocation("/dashboard")
+                      onSuccess: (user) => {
+                        setLocation(user.isStyleOwner ? "/dashboard" : "/book");
+                      }
                     });
                   })} 
                   className="space-y-4"
@@ -103,7 +105,9 @@ export default function AuthPage() {
                 <form 
                   onSubmit={registerForm.handleSubmit((data) => {
                     registerMutation.mutate(data, {
-                      onSuccess: () => setLocation("/dashboard")
+                      onSuccess: (user) => {
+                        setLocation(user.isStyleOwner ? "/dashboard" : "/book");
+                      }
                     });
                   })} 
                   className="space-y-4"

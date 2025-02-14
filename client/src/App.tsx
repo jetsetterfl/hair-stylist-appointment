@@ -14,8 +14,16 @@ function Router() {
     <Switch>
       <Route path="/" component={AuthPage} />
       <Route path="/auth" component={AuthPage} />
-      <ProtectedRoute path="/dashboard" component={StylistDashboard} />
-      <Route path="/book" component={BookAppointment} />
+      <ProtectedRoute 
+        path="/dashboard" 
+        component={StylistDashboard} 
+        requireRole="stylist"
+      />
+      <ProtectedRoute 
+        path="/book" 
+        component={BookAppointment} 
+        requireRole="customer"
+      />
       <Route component={NotFound} />
     </Switch>
   );

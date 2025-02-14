@@ -2,12 +2,16 @@ import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 import { Redirect, Route } from "wouter";
 
+type Role = "stylist" | "customer";
+
 export function ProtectedRoute({
   path,
   component: Component,
+  requireRole,
 }: {
   path: string;
   component: () => React.JSX.Element;
+  requireRole?: Role;
 }) {
   const { user, isLoading } = useAuth();
 
@@ -29,5 +33,20 @@ export function ProtectedRoute({
     );
   }
 
-  return <Component />
+  // Handle role-based access
+  if (requireRole) {
+    const isStyleOwner = user.isStyleOwner;
+    const hasCorrectRole = (requireRole === "stylist" && isStyleOwner) || 
+                          (requireRole === "customer" && !isStyleOwner);
+
+    if (!hasCorrectRole) {
+      return (
+        <Route path={path}>
+          <Redirect to={isStyleOwner ? "/dashboard" : "/book"} />
+        </Route>
+      );
+    }
+  }
+
+  return <Component />;
 }
