@@ -12,6 +12,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { format, addMinutes } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function BookAppointment() {
   const { toast } = useToast();
@@ -40,14 +42,56 @@ export default function BookAppointment() {
     },
     onSuccess: () => {
       toast({
-        title: "Appointment booked!",
-        description: "We'll send you a confirmation email shortly.",
+        title: "Success!",
+        description: "Your appointment has been booked. Check your email for confirmation.",
       });
+      form.reset();
       queryClient.invalidateQueries({ queryKey: ["/api/appointments"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Booking failed",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
-  const availableTimes = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"];
+  // Filter available times based on availabilities
+  const selectedDayOfWeek = selectedDate.getDay();
+  const dayAvailability = availabilities?.find(a => a.dayOfWeek === selectedDayOfWeek);
+
+  const availableTimes = dayAvailability 
+    ? generateTimeSlots(dayAvailability.startTime, dayAvailability.endTime) 
+    : [];
+
+  if (!dayAvailability) {
+    return (
+      <div className="container mx-auto py-8">
+        <Card className="max-w-2xl mx-auto">
+          <CardHeader>
+            <CardTitle>Book an Appointment</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Alert className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>No Availability</AlertTitle>
+              <AlertDescription>
+                The stylist is not available on {format(selectedDate, "EEEE")}s. 
+                Please select a different day.
+              </AlertDescription>
+            </Alert>
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={(date) => date && setSelectedDate(date)}
+              className="rounded-md border"
+            />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-8">
@@ -145,4 +189,31 @@ export default function BookAppointment() {
       </Card>
     </div>
   );
+}
+
+function generateTimeSlots(start: string, end: string): string[] {
+  const slots: string[] = [];
+  const [startHour, startMinute] = start.split(":").map(Number);
+  const [endHour, endMinute] = end.split(":").map(Number);
+
+  let currentHour = startHour;
+  let currentMinute = startMinute;
+
+  while (
+    currentHour < endHour || 
+    (currentHour === endHour && currentMinute <= endMinute)
+  ) {
+    slots.push(
+      `${currentHour.toString().padStart(2, "0")}:${currentMinute.toString().padStart(2, "0")}`
+    );
+
+    // Add 45 minutes for appointment + 15 minutes break
+    currentMinute += 60;
+    if (currentMinute >= 60) {
+      currentHour += Math.floor(currentMinute / 60);
+      currentMinute = currentMinute % 60;
+    }
+  }
+
+  return slots;
 }

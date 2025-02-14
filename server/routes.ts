@@ -3,6 +3,8 @@ import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { insertAvailabilitySchema, insertAppointmentSchema } from "@shared/schema";
+import { sendAppointmentConfirmation } from "./email";
+import { format } from "date-fns";
 
 function requireAuth(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
   if (!req.isAuthenticated()) {
@@ -19,7 +21,7 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/availability", requireAuth, async (req, res) => {
     const result = insertAvailabilitySchema.safeParse(req.body);
     if (!result.success) return res.status(400).send(result.error.message);
-    
+
     const availability = await storage.createAvailability(result.data);
     res.json(availability);
   });
@@ -38,8 +40,22 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/appointment", async (req, res) => {
     const result = insertAppointmentSchema.safeParse(req.body);
     if (!result.success) return res.status(400).send(result.error.message);
-    
+
     const appointment = await storage.createAppointment(result.data);
+
+    // Get stylist info and send confirmation email
+    const stylist = await storage.getUser(appointment.stylistId);
+    if (stylist) {
+      await sendAppointmentConfirmation({
+        clientName: appointment.clientName,
+        clientEmail: appointment.clientEmail,
+        date: format(new Date(appointment.date), "PPPP"),
+        startTime: appointment.startTime,
+        endTime: appointment.endTime,
+        stylistName: stylist.username
+      });
+    }
+
     res.json(appointment);
   });
 
