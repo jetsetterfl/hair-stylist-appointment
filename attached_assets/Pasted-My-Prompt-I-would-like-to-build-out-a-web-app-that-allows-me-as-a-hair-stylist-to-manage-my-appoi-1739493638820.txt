@@ -1,0 +1,47 @@
+My Prompt: 
+
+I would like to build out a web app that allows me as a hair stylist to manage my appointments and my customer the ability to make appointments. The app should have a owner interface - where I can tell what times I am available and on what days along with breaks etc that I may want to take. Make it easy and simple as a owner for me to allocate my availability. Each appointment will be default to 45 mins. between each appointment, I would like to take a 15 min break so the next appointment should only start after my break. The customer interface will most likely be launched from my facebook or social media site via a link to make an appointment. It should look at my availability and let a person make an appointment. I would like to use an agent to build out an app like this - can you enhance this prompt for me first. Second, once the enhanced prompt is ready - you can help me build out this web app.
+
+GEMINI's Enhanced Prompt:
+
+Okay, let's enhance your prompt to be more suitable for an agent (like a large language model or a specialized development tool) to help you build your hair stylist appointment web app. We'll break down the requirements more clearly and add some important considerations.
+
+Enhanced Prompt for Hair Stylist Appointment Web App Development
+
+I want to build a web application for managing hair stylist appointments, with two distinct interfaces: one for the stylist (owner) and one for customers.
+
+1. Stylist (Owner) Interface:
+
+Availability Management:
+
+Daily/Weekly View: A calendar-like interface to easily set available days and times. Should allow for recurring weekly schedules (e.g., available every Tuesday and Thursday).
+Customizable Time Slots: The ability to define specific start and end times for work hours on each day.
+Breaks: Easy input of break times (start and end). The system should automatically calculate appointment availability around these breaks. Breaks should be considered as unavailable time slots.
+Default Appointment Duration: Appointments are typically 45 minutes long, with a 15-minute break after each appointment. The system should automatically calculate the next available appointment slot based on these durations and breaks.
+Special Days/Exceptions: Ability to mark specific days as unavailable (e.g., holidays, personal time) or adjust work hours for a particular day.
+Appointment Viewing/Management: A view to see all scheduled appointments, with the ability to edit or cancel them (with appropriate notifications to the customer).
+Reporting: Basic reporting on appointment schedules (e.g., daily/weekly view of booked appointments).
+User Authentication: Secure login for the stylist.
+
+2. Customer Interface:
+
+Appointment Booking:
+
+Availability Display: A clear display of available appointment slots based on the stylist's defined schedule, taking into account appointment duration and breaks. Should prevent double-booking.
+Date Selection: Easy navigation to select desired appointment date.
+Time Selection: Display available start times for appointments.
+Customer Information Input: Fields for name, contact information (phone number or email), and optionally, a brief description of the desired service.
+Appointment Confirmation: Confirmation page displaying appointment details. Ideally, include an option for the customer to receive a confirmation email or SMS.
+Appointment Cancellation (Optional): Allow customers to cancel their appointments (within a certain timeframe), with appropriate notifications to the stylist.
+Integration (Desired): A simple way to integrate this booking page into my Facebook or other social media profiles (e.g., a link).
+
+3. Technical Considerations:
+
+Platform: (Specify if you have any preferences, e.g., web-based, mobile app, etc. A web-based app is likely the most versatile).
+Database: (No need to specify a particular database at this stage unless you have a strong preference. The agent can suggest suitable options).
+User Interface (UI) Design: Clean, intuitive, and user-friendly design for both interfaces.
+Notifications: Email/SMS notifications for appointment confirmations, reminders (optional), and cancellations (if implemented). (This might be a later enhancement).
+Scalability: The app should be designed to handle a reasonable number of appointments and users.
+4. Development Process:
+
+I'd like to work with the agent in an iterative manner, starting with a basic functional version and then adding features and refinements.
