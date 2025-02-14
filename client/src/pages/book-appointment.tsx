@@ -1,3 +1,4 @@
+import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
@@ -18,16 +19,23 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 export default function BookAppointment() {
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const stylistId = 1; // In a real app, this would come from the URL or context
+  const [selectedStylist, setSelectedStylist] = useState<number | null>(null);
 
+  // Fetch all stylists
+  const { data: stylists } = useQuery({
+    queryKey: ["/api/stylists"],
+  });
+
+  // Fetch selected stylist's availability
   const { data: availabilities } = useQuery<Availability[]>({
-    queryKey: ["/api/availability", stylistId],
+    queryKey: ["/api/availability", selectedStylist],
+    enabled: !!selectedStylist,
   });
 
   const form = useForm({
     resolver: zodResolver(insertAppointmentSchema),
     defaultValues: {
-      stylistId,
+      stylistId: undefined,
       date: new Date(),
       startTime: "",
       endTime: "",
@@ -65,6 +73,39 @@ export default function BookAppointment() {
     ? generateTimeSlots(dayAvailability.startTime, dayAvailability.endTime) 
     : [];
 
+  if (!selectedStylist) {
+    return (
+      <div className="container mx-auto py-8">
+        <Card className="max-w-2xl mx-auto">
+          <CardHeader>
+            <CardTitle>Book an Appointment</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Alert className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Select a Stylist</AlertTitle>
+              <AlertDescription>
+                Please select a stylist to view their availability.
+              </AlertDescription>
+            </Alert>
+            <div className="space-y-4">
+              {stylists?.map((stylist) => (
+                <Button
+                  key={stylist.id}
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setSelectedStylist(stylist.id)}
+                >
+                  {stylist.username}
+                </Button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (!dayAvailability) {
     return (
       <div className="container mx-auto py-8">
@@ -87,6 +128,13 @@ export default function BookAppointment() {
               onSelect={(date) => date && setSelectedDate(date)}
               className="rounded-md border"
             />
+            <Button
+              className="mt-4 w-full"
+              variant="outline"
+              onClick={() => setSelectedStylist(null)}
+            >
+              Choose Different Stylist
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -108,6 +156,7 @@ export default function BookAppointment() {
 
               createAppointmentMutation.mutate({
                 ...data,
+                stylistId: selectedStylist,
                 date: startDate,
                 endTime: format(addMinutes(startDate, 45), "HH:mm"),
               });
@@ -120,6 +169,13 @@ export default function BookAppointment() {
                     onSelect={(date) => date && setSelectedDate(date)}
                     className="rounded-md border"
                   />
+                  <Button
+                    className="mt-4 w-full"
+                    variant="outline"
+                    onClick={() => setSelectedStylist(null)}
+                  >
+                    Choose Different Stylist
+                  </Button>
                 </div>
 
                 <div className="space-y-4">

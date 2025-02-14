@@ -6,6 +6,7 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  getStylists(): Promise<User[]>;
   createAvailability(availability: InsertAvailability): Promise<Availability>;
   getAvailabilities(stylistId: number): Promise<Availability[]>;
   createAppointment(appointment: InsertAppointment): Promise<Appointment>;

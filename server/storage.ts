@@ -34,6 +34,10 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async getStylists(): Promise<User[]> {
+    return db.select().from(users).where(eq(users.isStyleOwner, true));
+  }
+
   async createAvailability(insertAvailability: InsertAvailability): Promise<Availability> {
     const [availability] = await db
       .insert(availabilities)

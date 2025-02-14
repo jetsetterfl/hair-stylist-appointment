@@ -17,6 +17,12 @@ function requireAuth(req: Express.Request, res: Express.Response, next: Express.
 export function registerRoutes(app: Express): Server {
   setupAuth(app);
 
+  // Get all stylists
+  app.get("/api/stylists", async (req, res) => {
+    const stylists = await storage.getStylists();
+    res.json(stylists);
+  });
+
   // Availability routes
   app.post("/api/availability", requireAuth, async (req, res) => {
     const result = insertAvailabilitySchema.safeParse(req.body);
