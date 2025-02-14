@@ -1,77 +1,70 @@
 import { IStorage } from "./types";
 import { User, InsertUser, Availability, InsertAvailability, Appointment, InsertAppointment } from "@shared/schema";
 import session from "express-session";
-import createMemoryStore from "memorystore";
+import connectPg from "connect-pg-simple";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
+import { users, availabilities, appointments } from "@shared/schema";
+import { pool } from "./db";
 
-const MemoryStore = createMemoryStore(session);
+const PostgresSessionStore = connectPg(session);
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private availabilities: Map<number, Availability>;
-  private appointments: Map<number, Appointment>;
+export class DatabaseStorage implements IStorage {
   sessionStore: session.Store;
-  currentId: number;
 
   constructor() {
-    this.users = new Map();
-    this.availabilities = new Map();
-    this.appointments = new Map();
-    this.currentId = 1;
-    this.sessionStore = new MemoryStore({
-      checkPeriod: 86400000,
+    this.sessionStore = new PostgresSessionStore({
+      pool,
+      createTableIfMissing: true,
     });
   }
 
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentId++;
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+    const [user] = await db.insert(users).values(insertUser).returning();
     return user;
   }
 
   async createAvailability(insertAvailability: InsertAvailability): Promise<Availability> {
-    const id = this.currentId++;
-    const availability: Availability = { ...insertAvailability, id };
-    this.availabilities.set(id, availability);
+    const [availability] = await db
+      .insert(availabilities)
+      .values(insertAvailability)
+      .returning();
     return availability;
   }
 
   async getAvailabilities(stylistId: number): Promise<Availability[]> {
-    return Array.from(this.availabilities.values()).filter(
-      (avail) => avail.stylistId === stylistId
-    );
+    return db.select().from(availabilities).where(eq(availabilities.stylistId, stylistId));
   }
 
   async createAppointment(insertAppointment: InsertAppointment): Promise<Appointment> {
-    const id = this.currentId++;
-    const appointment: Appointment = { ...insertAppointment, id };
-    this.appointments.set(id, appointment);
+    const [appointment] = await db
+      .insert(appointments)
+      .values(insertAppointment)
+      .returning();
     return appointment;
   }
 
   async getAppointments(stylistId: number): Promise<Appointment[]> {
-    return Array.from(this.appointments.values()).filter(
-      (appt) => appt.stylistId === stylistId
-    );
+    return db.select().from(appointments).where(eq(appointments.stylistId, stylistId));
   }
 
   async deleteAvailability(id: number): Promise<void> {
-    this.availabilities.delete(id);
+    await db.delete(availabilities).where(eq(availabilities.id, id));
   }
 
   async deleteAppointment(id: number): Promise<void> {
-    this.appointments.delete(id);
+    await db.delete(appointments).where(eq(appointments.id, id));
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
