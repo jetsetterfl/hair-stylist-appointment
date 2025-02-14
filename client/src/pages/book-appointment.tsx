@@ -32,12 +32,6 @@ export default function BookAppointment() {
     enabled: !!selectedStylist,
   });
 
-  console.log('Availabilities response:', {
-    selectedStylist,
-    availabilities,
-    enabled: !!selectedStylist
-  });
-
   const form = useForm({
     resolver: zodResolver(insertAppointmentSchema),
     defaultValues: {
@@ -68,7 +62,6 @@ export default function BookAppointment() {
       });
       form.reset();
       queryClient.invalidateQueries({ queryKey: ["/api/appointments"] });
-      // Reset form and selected values
       setSelectedStylist(null);
     },
     onError: (error: Error) => {
@@ -113,15 +106,22 @@ export default function BookAppointment() {
     ? generateTimeSlots(dayAvailability.startTime, dayAvailability.endTime)
     : [];
 
-  const onSubmit = async (data: any) => {
-    console.log("Form submission started", data);
+  async function onSubmit(data: any) {
     try {
+      if (!selectedStylist) {
+        throw new Error("Please select a stylist");
+      }
+
+      if (!data.startTime) {
+        throw new Error("Please select an appointment time");
+      }
+
       const appointmentDate = new Date(selectedDate);
       const [hours, minutes] = data.startTime.split(":").map(Number);
       appointmentDate.setHours(hours, minutes);
 
       const appointmentData: InsertAppointment = {
-        stylistId: selectedStylist!,
+        stylistId: selectedStylist,
         clientName: data.clientName,
         clientEmail: data.clientEmail,
         date: appointmentDate,
@@ -129,12 +129,17 @@ export default function BookAppointment() {
         endTime: format(addMinutes(appointmentDate, 45), "HH:mm"),
       };
 
-      console.log('Submitting appointment:', appointmentData);
+      console.log('Creating appointment with data:', appointmentData);
       await createAppointmentMutation.mutateAsync(appointmentData);
     } catch (error) {
       console.error("Form submission error:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to book appointment",
+        variant: "destructive",
+      });
     }
-  };
+  }
 
   if (!selectedStylist) {
     return (
