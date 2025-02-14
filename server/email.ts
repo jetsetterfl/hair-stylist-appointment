@@ -35,7 +35,7 @@ export async function sendAppointmentConfirmation(data: AppointmentEmailData) {
   try {
     await mailService.send({
       to: data.clientEmail,
-      from: 'appointments@hairstylist.com', // This email domain needs to be verified in SendGrid
+      from: 'noreply@example.com', 
       subject: 'Appointment Confirmation',
       text: emailContent,
     });
