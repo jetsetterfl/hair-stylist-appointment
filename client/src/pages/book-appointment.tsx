@@ -28,8 +28,14 @@ export default function BookAppointment() {
 
   // Fetch selected stylist's availability
   const { data: availabilities } = useQuery<Availability[]>({
-    queryKey: ["/api/availability", selectedStylist],
+    queryKey: [`/api/availability/${selectedStylist}`],
     enabled: !!selectedStylist,
+  });
+
+  console.log('Availabilities response:', {
+    selectedStylist,
+    availabilities,
+    enabled: !!selectedStylist
   });
 
   const form = useForm({
@@ -65,14 +71,22 @@ export default function BookAppointment() {
     },
   });
 
-  // Update the availability check section
+  // Update the availability check section with better logging
   const dayAvailability = availabilities?.find(a => {
     const availabilityDate = new Date(a.date);
-    return (
+    const match = (
       availabilityDate.getFullYear() === selectedDate.getFullYear() &&
       availabilityDate.getMonth() === selectedDate.getMonth() &&
       availabilityDate.getDate() === selectedDate.getDate()
     );
+
+    console.log('Comparing dates:', {
+      availability: format(availabilityDate, 'yyyy-MM-dd'),
+      selected: format(selectedDate, 'yyyy-MM-dd'),
+      match
+    });
+
+    return match;
   });
 
   console.log('Checking availability:', {
