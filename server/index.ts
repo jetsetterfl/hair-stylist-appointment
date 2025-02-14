@@ -43,6 +43,7 @@ app.use((req, res, next) => {
 
 (async () => {
   try {
+    log("Starting server initialization...");
     const server = registerRoutes(app);
 
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -53,27 +54,44 @@ app.use((req, res, next) => {
       console.error('Server error:', err);
     });
 
-    if (app.get("env") === "development") {
-      await setupVite(app, server);
+    // Get environment variables
+    const PORT = Number(process.env.PORT) || 3000;
+    const NODE_ENV = process.env.NODE_ENV || 'development';
+    log(`Environment: ${NODE_ENV}`);
+    log(`Configuring server for port ${PORT}`);
+
+    if (NODE_ENV === "development") {
+      log("Setting up Vite integration...");
+      try {
+        await setupVite(app, server);
+        log("Vite integration completed successfully");
+      } catch (error) {
+        console.error("Failed to setup Vite:", error);
+        throw error;
+      }
     } else {
+      log("Setting up static file serving...");
       serveStatic(app);
     }
 
-    const PORT = Number(process.env.PORT) || 5000;
+    // Start the server
     server.listen(PORT, "0.0.0.0", () => {
       log(`Server is running on port ${PORT}`);
-      const replOwner = process.env.REPL_OWNER || 'amitshankar2';
-      const replSlug = process.env.REPL_SLUG || 'workspace';
-      const url = `https://${replOwner}.${replSlug}.repl.co`;
-      log(`Application URL: ${url}`);
-      log(`Please ensure your Repl is running and "Always On" is enabled in Replit`);
+      const replSlug = process.env.REPL_SLUG;
+      const replOwner = process.env.REPL_OWNER;
+      const url = replSlug && replOwner 
+        ? `https://${replSlug}.${replOwner}.repl.co`
+        : `http://localhost:${PORT}`;
 
-      // Add environment variable logging for debugging
+      log(`Application URL: ${url}`);
+      log("Please ensure your Repl is running and 'Always On' is enabled in Replit");
+
+      // Log all relevant environment variables for debugging
       log('Environment variables:');
-      log(`PORT: ${process.env.PORT}`);
+      log(`PORT: ${PORT}`);
       log(`REPL_OWNER: ${process.env.REPL_OWNER}`);
       log(`REPL_SLUG: ${process.env.REPL_SLUG}`);
-      log(`NODE_ENV: ${process.env.NODE_ENV}`);
+      log(`NODE_ENV: ${NODE_ENV}`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);
