@@ -30,17 +30,6 @@ export default function BookAppointment() {
   const { data: availabilities } = useQuery<Availability[]>({
     queryKey: ["/api/availability", selectedStylist],
     enabled: !!selectedStylist,
-    onSuccess: (data) => {
-      console.log("Received availabilities:", data);
-    },
-    onError: (error) => {
-      console.error("Error fetching availabilities:", error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch stylist's availability",
-        variant: "destructive",
-      });
-    },
   });
 
   const form = useForm({
@@ -76,16 +65,15 @@ export default function BookAppointment() {
     },
   });
 
-  // Filter available times based on availabilities
+  // Get the day of week (0 = Sunday, 6 = Saturday)
   const selectedDayOfWeek = selectedDate.getDay();
-  console.log("Selected day of week:", selectedDayOfWeek);
-  console.log("All availabilities:", availabilities);
 
+  // Find availability for the selected day
   const dayAvailability = availabilities?.find(a => {
-    console.log("Comparing availability day", a.dayOfWeek, "with selected day", selectedDayOfWeek);
-    return a.dayOfWeek === selectedDayOfWeek;
+    // Convert the selected day to match our database format (1 = Monday, 7 = Sunday)
+    const adjustedSelectedDay = selectedDayOfWeek === 0 ? 7 : selectedDayOfWeek;
+    return a.dayOfWeek === adjustedSelectedDay;
   });
-  console.log("Found availability for day:", dayAvailability);
 
   const availableTimes = dayAvailability
     ? generateTimeSlots(dayAvailability.startTime, dayAvailability.endTime)
