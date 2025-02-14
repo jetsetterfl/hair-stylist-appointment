@@ -12,8 +12,8 @@ import BookAppointment from "@/pages/book-appointment";
 function Router() {
   return (
     <Switch>
-      <ProtectedRoute path="/" component={StylistDashboard} />
       <Route path="/auth" component={AuthPage} />
+      <ProtectedRoute path="/" component={StylistDashboard} />
       <Route path="/book" component={BookAppointment} />
       <Route component={NotFound} />
     </Switch>
