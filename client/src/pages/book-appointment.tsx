@@ -39,8 +39,8 @@ export default function BookAppointment() {
       clientEmail: insertAppointmentSchema.shape.clientEmail.email("Please enter a valid email address"),
     })),
     defaultValues: {
-      stylistId: undefined,
-      date: new Date(),
+      stylistId: selectedStylist,
+      date: selectedDate,
       startTime: "",
       endTime: "",
       clientName: "",
@@ -132,6 +132,7 @@ export default function BookAppointment() {
   async function onSubmit(data: any) {
     try {
       console.log("Form submission started with data:", data);
+      console.log("Form errors:", form.formState.errors);
 
       if (!selectedStylist) {
         throw new Error("Please select a stylist");
@@ -144,7 +145,12 @@ export default function BookAppointment() {
       // Create a new date object for the appointment
       const appointmentDate = new Date(selectedDate);
       const [hours, minutes] = data.startTime.split(":").map(Number);
-      appointmentDate.setHours(hours, minutes, 0, 0); // Set seconds and milliseconds to 0
+      appointmentDate.setHours(hours, minutes, 0, 0);
+
+      // Calculate end time (45 minutes after start time)
+      const endDate = new Date(appointmentDate);
+      endDate.setMinutes(endDate.getMinutes() + 45);
+      const endTime = format(endDate, "HH:mm");
 
       const appointmentData: InsertAppointment = {
         stylistId: selectedStylist,
@@ -152,7 +158,7 @@ export default function BookAppointment() {
         clientEmail: data.clientEmail,
         date: appointmentDate,
         startTime: data.startTime,
-        endTime: format(addMinutes(appointmentDate, 45), "HH:mm"),
+        endTime: endTime,
       };
 
       console.log('Creating appointment with data:', appointmentData);
@@ -267,7 +273,7 @@ export default function BookAppointment() {
                     name="startTime"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Appointment Time</FormLabel>
+                        <FormLabel>Appointment Time *</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <SelectTrigger>
                             <SelectValue placeholder="Select time" />
@@ -290,9 +296,9 @@ export default function BookAppointment() {
                     name="clientName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Your Name</FormLabel>
+                        <FormLabel>Your Name *</FormLabel>
                         <FormControl>
-                          <Input {...field} />
+                          <Input placeholder="Enter your full name" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -304,9 +310,13 @@ export default function BookAppointment() {
                     name="clientEmail"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email</FormLabel>
+                        <FormLabel>Email *</FormLabel>
                         <FormControl>
-                          <Input type="email" {...field} />
+                          <Input 
+                            type="email" 
+                            placeholder="Enter your email address"
+                            {...field} 
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -319,9 +329,15 @@ export default function BookAppointment() {
                 {Object.keys(form.formState.errors).length > 0 && (
                   <Alert variant="destructive">
                     <AlertCircle className="h-4 w-4" />
-                    <AlertTitle>Validation Error</AlertTitle>
+                    <AlertTitle>Please fix the following errors:</AlertTitle>
                     <AlertDescription>
-                      Please fill in all required fields correctly.
+                      <ul className="list-disc pl-4">
+                        {Object.entries(form.formState.errors).map(([field, error]) => (
+                          <li key={field}>
+                            {error?.message}
+                          </li>
+                        ))}
+                      </ul>
                     </AlertDescription>
                   </Alert>
                 )}
