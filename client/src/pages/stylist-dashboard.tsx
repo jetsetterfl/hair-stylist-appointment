@@ -19,11 +19,13 @@ export default function StylistDashboard() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   const { data: appointments } = useQuery<Appointment[]>({
-    queryKey: ["/api/appointments", user?.id],
+    queryKey: [`/api/appointments/${user?.id}`],
+    enabled: !!user?.id,
   });
 
   const { data: availabilities } = useQuery<Availability[]>({
-    queryKey: ["/api/availability", user?.id],
+    queryKey: [`/api/availability/${user?.id}`],
+    enabled: !!user?.id,
   });
 
   const form = useForm({
@@ -158,8 +160,8 @@ export default function StylistDashboard() {
                     />
                   </div>
 
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     className="w-full"
                     disabled={createAvailabilityMutation.isPending}
                   >
