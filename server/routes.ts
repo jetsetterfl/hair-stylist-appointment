@@ -70,7 +70,7 @@ export function registerRoutes(app: Express): Server {
       // Get stylist info and send confirmation email
       const stylist = await storage.getUser(appointment.stylistId);
       if (stylist) {
-        await sendAppointmentConfirmation({
+        const emailSent = await sendAppointmentConfirmation({
           clientName: appointment.clientName,
           clientEmail: appointment.clientEmail,
           date: format(new Date(appointment.date), "PPPP"),
@@ -78,6 +78,14 @@ export function registerRoutes(app: Express): Server {
           endTime: appointment.endTime,
           stylistName: stylist.username
         });
+
+        console.log("Email sending result:", emailSent ? "Success" : "Failed");
+
+        if (!emailSent) {
+          console.error("Failed to send confirmation email");
+        }
+      } else {
+        console.error("Stylist not found for ID:", appointment.stylistId);
       }
 
       res.json(appointment);

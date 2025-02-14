@@ -17,6 +17,8 @@ type AppointmentEmailData = {
 };
 
 export async function sendAppointmentConfirmation(data: AppointmentEmailData) {
+  console.log("Attempting to send email confirmation to:", data.clientEmail);
+
   const emailContent = `
     Dear ${data.clientName},
 
@@ -33,13 +35,17 @@ export async function sendAppointmentConfirmation(data: AppointmentEmailData) {
   try {
     await mailService.send({
       to: data.clientEmail,
-      from: 'appointments@hairstylist.com', // Update this with your verified sender
+      from: 'appointments@hairstylist.com', // This email domain needs to be verified in SendGrid
       subject: 'Appointment Confirmation',
       text: emailContent,
     });
+    console.log("Email sent successfully to:", data.clientEmail);
     return true;
   } catch (error) {
     console.error('Failed to send email:', error);
+    if (error instanceof Error) {
+      console.error('Error details:', error.message);
+    }
     return false;
   }
 }
