@@ -51,9 +51,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createAppointment(insertAppointment: InsertAppointment): Promise<Appointment> {
+    // Convert the date string to a Date object before inserting
+    const appointmentData = {
+      ...insertAppointment,
+      date: new Date(insertAppointment.date)
+    };
+
     const [appointment] = await db
       .insert(appointments)
-      .values(insertAppointment)
+      .values(appointmentData)
       .returning();
     return appointment;
   }
