@@ -5,12 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { insertAppointmentSchema, Availability } from "@shared/schema";
+import { insertAppointmentSchema, Availability, InsertAppointment } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { format, addMinutes, isSameDay } from "date-fns";
+import { format, addMinutes } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { AlertCircle } from "lucide-react";
@@ -51,8 +51,13 @@ export default function BookAppointment() {
   });
 
   const createAppointmentMutation = useMutation({
-    mutationFn: async (data: any) => {
-      await apiRequest("POST", "/api/appointment", data);
+    mutationFn: async (data: InsertAppointment) => {
+      const response = await apiRequest("POST", "/api/appointment", data);
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error);
+      }
+      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -61,8 +66,10 @@ export default function BookAppointment() {
       });
       form.reset();
       queryClient.invalidateQueries({ queryKey: ["/api/appointments"] });
+      // Reset form and selected values
+      setSelectedStylist(null);
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast({
         title: "Booking failed",
         description: error.message,
@@ -102,6 +109,24 @@ export default function BookAppointment() {
   const availableTimes = dayAvailability
     ? generateTimeSlots(dayAvailability.startTime, dayAvailability.endTime)
     : [];
+
+  const onSubmit = form.handleSubmit((data) => {
+    const appointmentDate = new Date(selectedDate);
+    const [hours, minutes] = data.startTime.split(":").map(Number);
+    appointmentDate.setHours(hours, minutes);
+
+    const appointmentData: InsertAppointment = {
+      stylistId: selectedStylist!,
+      clientName: data.clientName,
+      clientEmail: data.clientEmail,
+      date: appointmentDate.toISOString(),
+      startTime: data.startTime,
+      endTime: format(addMinutes(appointmentDate, 45), "HH:mm"),
+    };
+
+    console.log('Submitting appointment:', appointmentData);
+    createAppointmentMutation.mutate(appointmentData);
+  });
 
   if (!selectedStylist) {
     return (
@@ -179,18 +204,7 @@ export default function BookAppointment() {
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit((data) => {
-              const appointmentDate = new Date(selectedDate);
-              const [hours, minutes] = data.startTime.split(":").map(Number);
-              appointmentDate.setHours(hours, minutes);
-
-              createAppointmentMutation.mutate({
-                ...data,
-                stylistId: selectedStylist,
-                date: appointmentDate.toISOString(),
-                endTime: format(addMinutes(appointmentDate, 45), "HH:mm"),
-              });
-            })} className="space-y-6">
+            <form onSubmit={onSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <Calendar
