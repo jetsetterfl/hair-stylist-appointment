@@ -12,9 +12,9 @@ export const users = pgTable("users", {
 export const availabilities = pgTable("availabilities", {
   id: serial("id").primaryKey(),
   stylistId: integer("stylist_id").notNull(),
-  date: date("date").notNull(), // Changed from day_of_week to date
-  startTime: text("start_time").notNull(), // HH:mm format
-  endTime: text("end_time").notNull(), // HH:mm format
+  date: date("date").notNull(),
+  startTime: text("start_time").notNull(),
+  endTime: text("end_time").notNull(),
 });
 
 export const appointments = pgTable("appointments", {
@@ -23,8 +23,8 @@ export const appointments = pgTable("appointments", {
   clientName: text("client_name").notNull(),
   clientEmail: text("client_email").notNull(),
   date: timestamp("date").notNull(),
-  startTime: text("start_time").notNull(), // HH:mm format
-  endTime: text("end_time").notNull(), // HH:mm format
+  startTime: text("start_time").notNull(),
+  endTime: text("end_time").notNull(),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -40,6 +40,7 @@ export const insertAppointmentSchema = createInsertSchema(appointments)
     clientEmail: z.string().email("Valid email is required"),
     startTime: z.string().min(1, "Start time is required"),
     endTime: z.string().min(1, "End time is required"),
+    date: z.date(),
   });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;

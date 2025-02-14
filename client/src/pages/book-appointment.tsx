@@ -160,19 +160,18 @@ export default function BookAppointment() {
         throw new Error("Please select an appointment time");
       }
 
-      // Create a new date object for the appointment
-      const appointmentDate = new Date(selectedDate);
+      // Create appointment date by combining the selected date with the time
       const [hours, minutes] = data.startTime.split(":").map(Number);
+      const appointmentDate = new Date(selectedDate);
       appointmentDate.setHours(hours, minutes, 0, 0);
 
-      // The endTime should already be set by the useEffect hook
       const appointmentData: InsertAppointment = {
         stylistId: selectedStylist,
         clientName: data.clientName,
         clientEmail: data.clientEmail,
-        date: appointmentDate,
+        date: appointmentDate, // Now sending as a Date object
         startTime: data.startTime,
-        endTime: data.endTime, // This is now set by the useEffect hook
+        endTime: data.endTime,
       };
 
       console.log('Creating appointment with data:', appointmentData);
