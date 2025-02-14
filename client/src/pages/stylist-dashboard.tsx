@@ -9,9 +9,13 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { Clock, Calendar as CalendarIcon, Trash2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { useToast } from "@/hooks/use-toast";
 
 export default function StylistDashboard() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   const { data: appointments } = useQuery<Appointment[]>({
@@ -22,12 +26,23 @@ export default function StylistDashboard() {
     queryKey: ["/api/availability", user?.id],
   });
 
+  const form = useForm({
+    defaultValues: {
+      startTime: "09:00",
+      endTime: "17:00"
+    }
+  });
+
   const deleteAvailabilityMutation = useMutation({
     mutationFn: async (id: number) => {
       await apiRequest("DELETE", `/api/availability/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/availability"] });
+      toast({
+        title: "Availability deleted",
+        description: "Your availability has been removed."
+      });
     },
   });
 
@@ -40,8 +55,23 @@ export default function StylistDashboard() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/availability"] });
+      toast({
+        title: "Availability saved",
+        description: "Your availability has been updated."
+      });
     },
   });
+
+  // Generate available time slots
+  const timeSlots = [];
+  for (let hour = 0; hour < 24; hour++) {
+    for (let minute of ["00", "30"]) {
+      timeSlots.push(`${hour.toString().padStart(2, "0")}:${minute}`);
+    }
+  }
+
+  // Get day of week from selected date
+  const selectedDayOfWeek = selectedDate.getDay();
 
   return (
     <div className="container mx-auto py-8">
@@ -71,35 +101,84 @@ export default function StylistDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="grid grid-cols-3 gap-4">
-                <Select onValueChange={(value) => {
-                  createAvailabilityMutation.mutate({
-                    dayOfWeek: parseInt(value),
-                    startTime: "09:00",
-                    endTime: "17:00"
-                  });
-                }}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select day" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="0">Sunday</SelectItem>
-                    <SelectItem value="1">Monday</SelectItem>
-                    <SelectItem value="2">Tuesday</SelectItem>
-                    <SelectItem value="3">Wednesday</SelectItem>
-                    <SelectItem value="4">Thursday</SelectItem>
-                    <SelectItem value="5">Friday</SelectItem>
-                    <SelectItem value="6">Saturday</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit((data) => {
+                createAvailabilityMutation.mutate({
+                  dayOfWeek: selectedDayOfWeek,
+                  startTime: data.startTime,
+                  endTime: data.endTime
+                });
+              })} className="space-y-4">
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-sm font-medium mb-2">Selected Day: {format(selectedDate, "EEEE")}</p>
+                  </div>
 
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="startTime"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Start Time</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select start time" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {timeSlots.map((time) => (
+                                <SelectItem key={time} value={time}>
+                                  {time}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="endTime"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>End Time</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select end time" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {timeSlots.map((time) => (
+                                <SelectItem key={time} value={time}>
+                                  {time}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <Button 
+                    type="submit" 
+                    className="w-full"
+                    disabled={createAvailabilityMutation.isPending}
+                  >
+                    {createAvailabilityMutation.isPending ? "Saving..." : "Save Availability"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+
+            <div className="mt-6">
+              <h3 className="text-sm font-medium mb-2">Current Availabilities</h3>
               <div className="space-y-2">
                 {availabilities?.map((avail) => (
                   <div key={avail.id} className="flex items-center justify-between p-2 bg-muted rounded-lg">
                     <span>
-                      {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][avail.dayOfWeek]} {avail.startTime}-{avail.endTime}
+                      {["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][avail.dayOfWeek]}{" "}
+                      {avail.startTime} - {avail.endTime}
                     </span>
                     <Button
                       variant="ghost"
@@ -132,6 +211,11 @@ export default function StylistDashboard() {
                   <p className="text-sm text-muted-foreground">{appt.clientEmail}</p>
                 </div>
               ))}
+              {(!appointments || appointments.length === 0) && (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No upcoming appointments
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
