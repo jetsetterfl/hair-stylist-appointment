@@ -55,25 +55,36 @@ export function registerRoutes(app: Express): Server {
 
   // Appointment routes
   app.post("/api/appointment", async (req, res) => {
+    console.log("Received appointment request:", req.body);
+
     const result = insertAppointmentSchema.safeParse(req.body);
-    if (!result.success) return res.status(400).send(result.error.message);
-
-    const appointment = await storage.createAppointment(result.data);
-
-    // Get stylist info and send confirmation email
-    const stylist = await storage.getUser(appointment.stylistId);
-    if (stylist) {
-      await sendAppointmentConfirmation({
-        clientName: appointment.clientName,
-        clientEmail: appointment.clientEmail,
-        date: format(new Date(appointment.date), "PPPP"),
-        startTime: appointment.startTime,
-        endTime: appointment.endTime,
-        stylistName: stylist.username
-      });
+    if (!result.success) {
+      console.error("Validation error:", result.error);
+      return res.status(400).send(result.error.message);
     }
 
-    res.json(appointment);
+    try {
+      const appointment = await storage.createAppointment(result.data);
+      console.log("Created appointment:", appointment);
+
+      // Get stylist info and send confirmation email
+      const stylist = await storage.getUser(appointment.stylistId);
+      if (stylist) {
+        await sendAppointmentConfirmation({
+          clientName: appointment.clientName,
+          clientEmail: appointment.clientEmail,
+          date: format(new Date(appointment.date), "PPPP"),
+          startTime: appointment.startTime,
+          endTime: appointment.endTime,
+          stylistName: stylist.username
+        });
+      }
+
+      res.json(appointment);
+    } catch (error) {
+      console.error("Failed to create appointment:", error);
+      res.status(500).send(error instanceof Error ? error.message : "Failed to create appointment");
+    }
   });
 
   app.get("/api/appointments/:stylistId", requireAuth, async (req, res) => {

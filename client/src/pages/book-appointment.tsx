@@ -46,16 +46,25 @@ export default function BookAppointment() {
 
   const createAppointmentMutation = useMutation({
     mutationFn: async (data: InsertAppointment) => {
-      console.log("Submitting appointment data:", data);
-      const response = await apiRequest("POST", "/api/appointment", data);
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error);
+      console.log("Starting mutation with data:", data);
+      try {
+        const response = await apiRequest("POST", "/api/appointment", data);
+        console.log("API Response:", response);
+        if (!response.ok) {
+          const error = await response.text();
+          console.error("API error:", error);
+          throw new Error(error);
+        }
+        const result = await response.json();
+        console.log("API Success result:", result);
+        return result;
+      } catch (error) {
+        console.error("Mutation error:", error);
+        throw error;
       }
-      return response.json();
     },
-    onSuccess: () => {
-      console.log("Appointment created successfully");
+    onSuccess: (data) => {
+      console.log("Mutation succeeded:", data);
       toast({
         title: "Success!",
         description: "Your appointment has been booked. Check your email for confirmation.",
@@ -65,7 +74,7 @@ export default function BookAppointment() {
       setSelectedStylist(null);
     },
     onError: (error: Error) => {
-      console.error("Appointment creation failed:", error);
+      console.error("Mutation error handler:", error);
       toast({
         title: "Booking failed",
         description: error.message,
@@ -108,6 +117,8 @@ export default function BookAppointment() {
 
   async function onSubmit(data: any) {
     try {
+      console.log("Form submission started with data:", data);
+
       if (!selectedStylist) {
         throw new Error("Please select a stylist");
       }
@@ -116,9 +127,10 @@ export default function BookAppointment() {
         throw new Error("Please select an appointment time");
       }
 
+      // Create a new date object for the appointment
       const appointmentDate = new Date(selectedDate);
       const [hours, minutes] = data.startTime.split(":").map(Number);
-      appointmentDate.setHours(hours, minutes);
+      appointmentDate.setHours(hours, minutes, 0, 0); // Set seconds and milliseconds to 0
 
       const appointmentData: InsertAppointment = {
         stylistId: selectedStylist,
