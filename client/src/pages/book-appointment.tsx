@@ -53,6 +53,19 @@ export default function BookAppointment() {
     form.setValue('stylistId', selectedStylist as number);
   }, [selectedStylist, form]);
 
+  // Update endTime when startTime changes
+  useEffect(() => {
+    const startTime = form.watch('startTime');
+    if (startTime) {
+      const [hours, minutes] = startTime.split(':').map(Number);
+      const startDate = new Date();
+      startDate.setHours(hours, minutes, 0, 0);
+      const endDate = addMinutes(startDate, 45);
+      const endTime = format(endDate, 'HH:mm');
+      form.setValue('endTime', endTime);
+    }
+  }, [form.watch('startTime')]);
+
   const createAppointmentMutation = useMutation({
     mutationFn: async (data: InsertAppointment) => {
       console.log("Starting mutation with data:", data);
@@ -152,18 +165,14 @@ export default function BookAppointment() {
       const [hours, minutes] = data.startTime.split(":").map(Number);
       appointmentDate.setHours(hours, minutes, 0, 0);
 
-      // Calculate end time (45 minutes after start time)
-      const endDate = new Date(appointmentDate);
-      endDate.setMinutes(endDate.getMinutes() + 45);
-      const endTime = format(endDate, "HH:mm");
-
+      // The endTime should already be set by the useEffect hook
       const appointmentData: InsertAppointment = {
         stylistId: selectedStylist,
         clientName: data.clientName,
         clientEmail: data.clientEmail,
         date: appointmentDate,
         startTime: data.startTime,
-        endTime: endTime,
+        endTime: data.endTime, // This is now set by the useEffect hook
       };
 
       console.log('Creating appointment with data:', appointmentData);
