@@ -4,6 +4,10 @@ if (!process.env.SENDGRID_API_KEY) {
   throw new Error("SENDGRID_API_KEY environment variable must be set");
 }
 
+if (!process.env.SENDGRID_VERIFIED_SENDER) {
+  throw new Error("SENDGRID_VERIFIED_SENDER environment variable must be set");
+}
+
 const mailService = new MailService();
 mailService.setApiKey(process.env.SENDGRID_API_KEY);
 
@@ -35,7 +39,7 @@ export async function sendAppointmentConfirmation(data: AppointmentEmailData) {
   try {
     await mailService.send({
       to: data.clientEmail,
-      from: 'noreply@example.com', 
+      from: process.env.SENDGRID_VERIFIED_SENDER,
       subject: 'Appointment Confirmation',
       text: emailContent,
     });
