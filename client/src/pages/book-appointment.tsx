@@ -40,7 +40,7 @@ export default function BookAppointment() {
     })),
     defaultValues: {
       stylistId: selectedStylist ?? undefined,
-      date: selectedDate,
+      date: format(selectedDate, 'yyyy-MM-dd'),
       startTime: "",
       endTime: "",
       clientName: "",
@@ -169,7 +169,7 @@ export default function BookAppointment() {
         stylistId: selectedStylist,
         clientName: data.clientName,
         clientEmail: data.clientEmail,
-        date: appointmentDate.toISOString(), // Convert to ISO string for consistent date format
+        date: format(appointmentDate, 'yyyy-MM-dd'), // Format date as string
         startTime: data.startTime,
         endTime: data.endTime,
       };

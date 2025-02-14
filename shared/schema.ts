@@ -40,7 +40,7 @@ export const insertAppointmentSchema = createInsertSchema(appointments)
     clientEmail: z.string().email("Valid email is required"),
     startTime: z.string().min(1, "Start time is required"),
     endTime: z.string().min(1, "End time is required"),
-    date: z.string().transform((str) => new Date(str)), // Transform ISO string to Date
+    date: z.string().min(1, "Date is required"), // Expect string from frontend
   });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
