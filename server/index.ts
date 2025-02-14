@@ -56,8 +56,8 @@ app.use((req, res, next) => {
   const PORT = process.env.PORT || 5000;
   server.listen(PORT, "0.0.0.0", () => {
     log(`Server is running on port ${PORT}`);
-    const replSlug = process.env.REPL_SLUG || 'workspace';
     const replOwner = process.env.REPL_OWNER || 'amitshankar2';
+    const replSlug = process.env.REPL_SLUG || 'workspace';
     const url = `https://${replSlug}.${replOwner}.repl.co`;
     log(`Application URL: ${url}`);
     log(`Please ensure your Repl is running and "Always On" is enabled in Replit`);
