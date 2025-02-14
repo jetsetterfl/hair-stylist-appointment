@@ -87,32 +87,42 @@ export default function BookAppointment() {
     },
   });
 
-  // Update the availability check section with better logging
+  // Generate available time slots
+  function generateTimeSlots(start: string, end: string): string[] {
+    const slots: string[] = [];
+    const [startHour, startMinute] = start.split(":").map(Number);
+    const [endHour, endMinute] = end.split(":").map(Number);
+
+    let currentHour = startHour;
+    let currentMinute = startMinute;
+
+    while (
+      currentHour < endHour ||
+      (currentHour === endHour && currentMinute <= endMinute)
+    ) {
+      slots.push(
+        `${currentHour.toString().padStart(2, "0")}:${currentMinute.toString().padStart(2, "0")}`
+      );
+
+      // Add 45 minutes for appointment + 15 minutes break
+      currentMinute += 60;
+      if (currentMinute >= 60) {
+        currentHour += Math.floor(currentMinute / 60);
+        currentMinute = currentMinute % 60;
+      }
+    }
+
+    return slots;
+  }
+
+  // Find availability for selected date
   const dayAvailability = availabilities?.find(a => {
     const availabilityDate = new Date(a.date);
-    const match = (
+    return (
       availabilityDate.getFullYear() === selectedDate.getFullYear() &&
       availabilityDate.getMonth() === selectedDate.getMonth() &&
       availabilityDate.getDate() === selectedDate.getDate()
     );
-
-    console.log('Comparing dates:', {
-      availability: format(availabilityDate, 'yyyy-MM-dd'),
-      selected: format(selectedDate, 'yyyy-MM-dd'),
-      match
-    });
-
-    return match;
-  });
-
-  console.log('Checking availability:', {
-    selectedDate: format(selectedDate, 'yyyy-MM-dd'),
-    availabilities: availabilities?.map(a => ({
-      date: a.date,
-      startTime: a.startTime,
-      endTime: a.endTime
-    })),
-    foundAvailability: dayAvailability
   });
 
   const availableTimes = dayAvailability
@@ -258,7 +268,7 @@ export default function BookAppointment() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Appointment Time</FormLabel>
-                        <Select onValueChange={field.onChange}>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <SelectTrigger>
                             <SelectValue placeholder="Select time" />
                           </SelectTrigger>
@@ -329,31 +339,4 @@ export default function BookAppointment() {
       </Card>
     </div>
   );
-}
-
-function generateTimeSlots(start: string, end: string): string[] {
-  const slots: string[] = [];
-  const [startHour, startMinute] = start.split(":").map(Number);
-  const [endHour, endMinute] = end.split(":").map(Number);
-
-  let currentHour = startHour;
-  let currentMinute = startMinute;
-
-  while (
-    currentHour < endHour ||
-    (currentHour === endHour && currentMinute <= endMinute)
-  ) {
-    slots.push(
-      `${currentHour.toString().padStart(2, "0")}:${currentMinute.toString().padStart(2, "0")}`
-    );
-
-    // Add 45 minutes for appointment + 15 minutes break
-    currentMinute += 60;
-    if (currentMinute >= 60) {
-      currentHour += Math.floor(currentMinute / 60);
-      currentMinute = currentMinute % 60;
-    }
-  }
-
-  return slots;
 }
