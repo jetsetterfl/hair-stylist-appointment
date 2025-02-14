@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { insertAppointmentSchema, Availability, InsertAppointment } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format, addMinutes } from "date-fns";
@@ -39,7 +39,7 @@ export default function BookAppointment() {
       clientEmail: insertAppointmentSchema.shape.clientEmail.email("Please enter a valid email address"),
     })),
     defaultValues: {
-      stylistId: selectedStylist,
+      stylistId: selectedStylist ?? undefined,
       date: selectedDate,
       startTime: "",
       endTime: "",
@@ -47,6 +47,11 @@ export default function BookAppointment() {
       clientEmail: "",
     },
   });
+
+  // Update form values when stylist is selected
+  useEffect(() => {
+    form.setValue('stylistId', selectedStylist as number);
+  }, [selectedStylist, form]);
 
   const createAppointmentMutation = useMutation({
     mutationFn: async (data: InsertAppointment) => {
@@ -312,10 +317,10 @@ export default function BookAppointment() {
                       <FormItem>
                         <FormLabel>Email *</FormLabel>
                         <FormControl>
-                          <Input 
-                            type="email" 
+                          <Input
+                            type="email"
                             placeholder="Enter your email address"
-                            {...field} 
+                            {...field}
                           />
                         </FormControl>
                         <FormMessage />
