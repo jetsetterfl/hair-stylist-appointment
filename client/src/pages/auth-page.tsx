@@ -10,22 +10,33 @@ import { useForm } from "react-hook-form";
 import { insertUserSchema } from "@shared/schema";
 import { useLocation } from "wouter";
 import { Scissors } from "lucide-react";
+import { useEffect } from "react";
 
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
   const [, setLocation] = useLocation();
 
-  if (user) {
-    setLocation("/");
-    return null;
-  }
+  useEffect(() => {
+    if (user) {
+      setLocation("/dashboard");
+    }
+  }, [user, setLocation]);
 
   const loginForm = useForm({
     resolver: zodResolver(insertUserSchema.pick({ username: true, password: true })),
+    defaultValues: {
+      username: "",
+      password: "",
+    },
   });
 
   const registerForm = useForm({
     resolver: zodResolver(insertUserSchema),
+    defaultValues: {
+      username: "",
+      password: "",
+      isStyleOwner: false,
+    },
   });
 
   return (
@@ -47,7 +58,7 @@ export default function AuthPage() {
                 <TabsTrigger value="login">Login</TabsTrigger>
                 <TabsTrigger value="register">Register</TabsTrigger>
               </TabsList>
-              
+
               <TabsContent value="login">
                 <Form {...loginForm}>
                   <form onSubmit={loginForm.handleSubmit((data) => loginMutation.mutate(data))} className="space-y-4">
@@ -83,7 +94,7 @@ export default function AuthPage() {
                   </form>
                 </Form>
               </TabsContent>
-              
+
               <TabsContent value="register">
                 <Form {...registerForm}>
                   <form onSubmit={registerForm.handleSubmit((data) => registerMutation.mutate(data))} className="space-y-4">
