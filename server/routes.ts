@@ -35,8 +35,16 @@ export function registerRoutes(app: Express): Server {
   });
 
   app.get("/api/availability/:stylistId", async (req, res) => {
-    const availabilities = await storage.getAvailabilities(parseInt(req.params.stylistId));
-    console.log(`Fetched availabilities for stylist ${req.params.stylistId}:`, availabilities);
+    const stylistId = parseInt(req.params.stylistId);
+    console.log("Fetching availability for stylist ID:", stylistId);
+
+    if (isNaN(stylistId)) {
+      console.log("Invalid stylist ID:", req.params.stylistId);
+      return res.status(400).send("Invalid stylist ID");
+    }
+
+    const availabilities = await storage.getAvailabilities(stylistId);
+    console.log(`Fetched availabilities for stylist ${stylistId}:`, availabilities);
     res.json(availabilities);
   });
 

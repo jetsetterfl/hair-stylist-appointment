@@ -30,6 +30,17 @@ export default function BookAppointment() {
   const { data: availabilities } = useQuery<Availability[]>({
     queryKey: ["/api/availability", selectedStylist],
     enabled: !!selectedStylist,
+    onSuccess: (data) => {
+      console.log("Received availabilities:", data);
+    },
+    onError: (error) => {
+      console.error("Error fetching availabilities:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch stylist's availability",
+        variant: "destructive",
+      });
+    },
   });
 
   const form = useForm({
@@ -67,10 +78,17 @@ export default function BookAppointment() {
 
   // Filter available times based on availabilities
   const selectedDayOfWeek = selectedDate.getDay();
-  const dayAvailability = availabilities?.find(a => a.dayOfWeek === selectedDayOfWeek);
+  console.log("Selected day of week:", selectedDayOfWeek);
+  console.log("All availabilities:", availabilities);
 
-  const availableTimes = dayAvailability 
-    ? generateTimeSlots(dayAvailability.startTime, dayAvailability.endTime) 
+  const dayAvailability = availabilities?.find(a => {
+    console.log("Comparing availability day", a.dayOfWeek, "with selected day", selectedDayOfWeek);
+    return a.dayOfWeek === selectedDayOfWeek;
+  });
+  console.log("Found availability for day:", dayAvailability);
+
+  const availableTimes = dayAvailability
+    ? generateTimeSlots(dayAvailability.startTime, dayAvailability.endTime)
     : [];
 
   if (!selectedStylist) {
@@ -118,7 +136,7 @@ export default function BookAppointment() {
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>No Availability</AlertTitle>
               <AlertDescription>
-                The stylist is not available on {format(selectedDate, "EEEE")}s. 
+                The stylist is not available on {format(selectedDate, "EEEE")}s.
                 Please select a different day.
               </AlertDescription>
             </Alert>
@@ -256,7 +274,7 @@ function generateTimeSlots(start: string, end: string): string[] {
   let currentMinute = startMinute;
 
   while (
-    currentHour < endHour || 
+    currentHour < endHour ||
     (currentHour === endHour && currentMinute <= endMinute)
   ) {
     slots.push(
