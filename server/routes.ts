@@ -20,6 +20,7 @@ export function registerRoutes(app: Express): Server {
   // Get all stylists
   app.get("/api/stylists", async (req, res) => {
     const stylists = await storage.getStylists();
+    console.log("Fetched stylists:", stylists);
     res.json(stylists);
   });
 
@@ -29,11 +30,13 @@ export function registerRoutes(app: Express): Server {
     if (!result.success) return res.status(400).send(result.error.message);
 
     const availability = await storage.createAvailability(result.data);
+    console.log("Created availability:", availability);
     res.json(availability);
   });
 
   app.get("/api/availability/:stylistId", async (req, res) => {
     const availabilities = await storage.getAvailabilities(parseInt(req.params.stylistId));
+    console.log(`Fetched availabilities for stylist ${req.params.stylistId}:`, availabilities);
     res.json(availabilities);
   });
 

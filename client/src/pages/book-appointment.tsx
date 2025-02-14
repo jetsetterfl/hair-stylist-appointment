@@ -22,7 +22,7 @@ export default function BookAppointment() {
   const [selectedStylist, setSelectedStylist] = useState<number | null>(null);
 
   // Fetch all stylists
-  const { data: stylists } = useQuery({
+  const { data: stylists } = useQuery<{ id: number; username: string }[]>({
     queryKey: ["/api/stylists"],
   });
 
