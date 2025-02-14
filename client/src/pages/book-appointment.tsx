@@ -65,10 +65,25 @@ export default function BookAppointment() {
     },
   });
 
-  // Find availability for the selected date
-  const dayAvailability = availabilities?.find(a => 
-    isSameDay(new Date(a.date), selectedDate)
-  );
+  // Update the availability check section
+  const dayAvailability = availabilities?.find(a => {
+    const availabilityDate = new Date(a.date);
+    return (
+      availabilityDate.getFullYear() === selectedDate.getFullYear() &&
+      availabilityDate.getMonth() === selectedDate.getMonth() &&
+      availabilityDate.getDate() === selectedDate.getDate()
+    );
+  });
+
+  console.log('Checking availability:', {
+    selectedDate: format(selectedDate, 'yyyy-MM-dd'),
+    availabilities: availabilities?.map(a => ({
+      date: a.date,
+      startTime: a.startTime,
+      endTime: a.endTime
+    })),
+    foundAvailability: dayAvailability
+  });
 
   const availableTimes = dayAvailability
     ? generateTimeSlots(dayAvailability.startTime, dayAvailability.endTime)
