@@ -52,6 +52,7 @@ export default function BookAppointment() {
 
   const createAppointmentMutation = useMutation({
     mutationFn: async (data: InsertAppointment) => {
+      console.log("Submitting appointment data:", data);
       const response = await apiRequest("POST", "/api/appointment", data);
       if (!response.ok) {
         const error = await response.text();
@@ -60,6 +61,7 @@ export default function BookAppointment() {
       return response.json();
     },
     onSuccess: () => {
+      console.log("Appointment created successfully");
       toast({
         title: "Success!",
         description: "Your appointment has been booked. Check your email for confirmation.",
@@ -70,6 +72,7 @@ export default function BookAppointment() {
       setSelectedStylist(null);
     },
     onError: (error: Error) => {
+      console.error("Appointment creation failed:", error);
       toast({
         title: "Booking failed",
         description: error.message,
@@ -110,23 +113,28 @@ export default function BookAppointment() {
     ? generateTimeSlots(dayAvailability.startTime, dayAvailability.endTime)
     : [];
 
-  const onSubmit = form.handleSubmit((data) => {
-    const appointmentDate = new Date(selectedDate);
-    const [hours, minutes] = data.startTime.split(":").map(Number);
-    appointmentDate.setHours(hours, minutes);
+  const onSubmit = async (data: any) => {
+    console.log("Form submission started", data);
+    try {
+      const appointmentDate = new Date(selectedDate);
+      const [hours, minutes] = data.startTime.split(":").map(Number);
+      appointmentDate.setHours(hours, minutes);
 
-    const appointmentData: InsertAppointment = {
-      stylistId: selectedStylist!,
-      clientName: data.clientName,
-      clientEmail: data.clientEmail,
-      date: appointmentDate.toISOString(),
-      startTime: data.startTime,
-      endTime: format(addMinutes(appointmentDate, 45), "HH:mm"),
-    };
+      const appointmentData: InsertAppointment = {
+        stylistId: selectedStylist!,
+        clientName: data.clientName,
+        clientEmail: data.clientEmail,
+        date: appointmentDate,
+        startTime: data.startTime,
+        endTime: format(addMinutes(appointmentDate, 45), "HH:mm"),
+      };
 
-    console.log('Submitting appointment:', appointmentData);
-    createAppointmentMutation.mutate(appointmentData);
-  });
+      console.log('Submitting appointment:', appointmentData);
+      await createAppointmentMutation.mutateAsync(appointmentData);
+    } catch (error) {
+      console.error("Form submission error:", error);
+    }
+  };
 
   if (!selectedStylist) {
     return (
@@ -204,7 +212,7 @@ export default function BookAppointment() {
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={onSubmit} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <Calendar
