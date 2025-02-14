@@ -34,7 +34,13 @@ export const insertUserSchema = createInsertSchema(users).pick({
 });
 
 export const insertAvailabilitySchema = createInsertSchema(availabilities);
-export const insertAppointmentSchema = createInsertSchema(appointments);
+export const insertAppointmentSchema = createInsertSchema(appointments)
+  .extend({
+    clientName: z.string().min(1, "Name is required"),
+    clientEmail: z.string().email("Valid email is required"),
+    startTime: z.string().min(1, "Start time is required"),
+    endTime: z.string().min(1, "End time is required"),
+  });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;

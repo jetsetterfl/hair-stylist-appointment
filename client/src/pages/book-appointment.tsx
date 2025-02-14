@@ -33,7 +33,11 @@ export default function BookAppointment() {
   });
 
   const form = useForm({
-    resolver: zodResolver(insertAppointmentSchema),
+    resolver: zodResolver(insertAppointmentSchema.extend({
+      startTime: insertAppointmentSchema.shape.startTime.min(1, "Please select an appointment time"),
+      clientName: insertAppointmentSchema.shape.clientName.min(1, "Please enter your name"),
+      clientEmail: insertAppointmentSchema.shape.clientEmail.email("Please enter a valid email address"),
+    })),
     defaultValues: {
       stylistId: undefined,
       date: new Date(),
@@ -301,13 +305,24 @@ export default function BookAppointment() {
                 </div>
               </div>
 
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={createAppointmentMutation.isPending}
-              >
-                {createAppointmentMutation.isPending ? "Booking..." : "Book Appointment"}
-              </Button>
+              <div className="space-y-2">
+                {Object.keys(form.formState.errors).length > 0 && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Validation Error</AlertTitle>
+                    <AlertDescription>
+                      Please fill in all required fields correctly.
+                    </AlertDescription>
+                  </Alert>
+                )}
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={createAppointmentMutation.isPending}
+                >
+                  {createAppointmentMutation.isPending ? "Booking..." : "Book Appointment"}
+                </Button>
+              </div>
             </form>
           </Form>
         </CardContent>
