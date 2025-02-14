@@ -10,7 +10,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { format, addMinutes } from "date-fns";
+import { format, addMinutes, isSameDay } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { AlertCircle } from "lucide-react";
@@ -65,15 +65,10 @@ export default function BookAppointment() {
     },
   });
 
-  // Get the day of week (0 = Sunday, 6 = Saturday)
-  const selectedDayOfWeek = selectedDate.getDay();
-
-  // Find availability for the selected day
-  const dayAvailability = availabilities?.find(a => {
-    // Convert the selected day to match our database format (1 = Monday, 7 = Sunday)
-    const adjustedSelectedDay = selectedDayOfWeek === 0 ? 7 : selectedDayOfWeek;
-    return a.dayOfWeek === adjustedSelectedDay;
-  });
+  // Find availability for the selected date
+  const dayAvailability = availabilities?.find(a => 
+    isSameDay(new Date(a.date), selectedDate)
+  );
 
   const availableTimes = dayAvailability
     ? generateTimeSlots(dayAvailability.startTime, dayAvailability.endTime)
@@ -124,8 +119,8 @@ export default function BookAppointment() {
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>No Availability</AlertTitle>
               <AlertDescription>
-                The stylist is not available on {format(selectedDate, "EEEE")}s.
-                Please select a different day.
+                The stylist is not available on {format(selectedDate, "PPP")}.
+                Please select a different date.
               </AlertDescription>
             </Alert>
             <Calendar
@@ -156,15 +151,15 @@ export default function BookAppointment() {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit((data) => {
-              const startDate = new Date(selectedDate);
+              const appointmentDate = new Date(selectedDate);
               const [hours, minutes] = data.startTime.split(":").map(Number);
-              startDate.setHours(hours, minutes);
+              appointmentDate.setHours(hours, minutes);
 
               createAppointmentMutation.mutate({
                 ...data,
                 stylistId: selectedStylist,
-                date: startDate,
-                endTime: format(addMinutes(startDate, 45), "HH:mm"),
+                date: appointmentDate.toISOString(),
+                endTime: format(addMinutes(appointmentDate, 45), "HH:mm"),
               });
             })} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

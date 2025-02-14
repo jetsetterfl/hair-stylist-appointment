@@ -47,9 +47,10 @@ export default function StylistDashboard() {
   });
 
   const createAvailabilityMutation = useMutation({
-    mutationFn: async (data: { dayOfWeek: number, startTime: string, endTime: string }) => {
+    mutationFn: async (data: { date: Date, startTime: string, endTime: string }) => {
       await apiRequest("POST", "/api/availability", {
         ...data,
+        date: format(data.date, 'yyyy-MM-dd'),
         stylistId: user?.id,
       });
     },
@@ -63,15 +64,12 @@ export default function StylistDashboard() {
   });
 
   // Generate available time slots
-  const timeSlots = [];
+  const timeSlots: string[] = [];
   for (let hour = 0; hour < 24; hour++) {
     for (let minute of ["00", "30"]) {
       timeSlots.push(`${hour.toString().padStart(2, "0")}:${minute}`);
     }
   }
-
-  // Get day of week from selected date
-  const selectedDayOfWeek = selectedDate.getDay();
 
   return (
     <div className="container mx-auto py-8">
@@ -104,14 +102,14 @@ export default function StylistDashboard() {
             <Form {...form}>
               <form onSubmit={form.handleSubmit((data) => {
                 createAvailabilityMutation.mutate({
-                  dayOfWeek: selectedDayOfWeek,
+                  date: selectedDate,
                   startTime: data.startTime,
                   endTime: data.endTime
                 });
               })} className="space-y-4">
                 <div className="space-y-4">
                   <div>
-                    <p className="text-sm font-medium mb-2">Selected Day: {format(selectedDate, "EEEE")}</p>
+                    <p className="text-sm font-medium mb-2">Selected Date: {format(selectedDate, "PPP")}</p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -177,7 +175,7 @@ export default function StylistDashboard() {
                 {availabilities?.map((avail) => (
                   <div key={avail.id} className="flex items-center justify-between p-2 bg-muted rounded-lg">
                     <span>
-                      {["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][avail.dayOfWeek]}{" "}
+                      {format(new Date(avail.date), "PPP")}{" "}
                       {avail.startTime} - {avail.endTime}
                     </span>
                     <Button

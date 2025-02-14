@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -12,7 +12,7 @@ export const users = pgTable("users", {
 export const availabilities = pgTable("availabilities", {
   id: serial("id").primaryKey(),
   stylistId: integer("stylist_id").notNull(),
-  dayOfWeek: integer("day_of_week").notNull(), // 0-6 for Sunday-Saturday
+  date: date("date").notNull(), // Changed from day_of_week to date
   startTime: text("start_time").notNull(), // HH:mm format
   endTime: text("end_time").notNull(), // HH:mm format
 });
