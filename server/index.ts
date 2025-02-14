@@ -1,6 +1,8 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import path, { dirname } from "path";
+import { fileURLToPath } from "url";
 
 const app = express();
 app.use(express.json());
@@ -54,13 +56,14 @@ app.use((req, res, next) => {
       console.error('Server error:', err);
     });
 
-    // Get environment variables
-    const PORT = Number(process.env.PORT) || 3000;
+    // Explicitly set port to 5000
+    const PORT = 5000;
     const NODE_ENV = process.env.NODE_ENV || 'development';
     log(`Environment: ${NODE_ENV}`);
     log(`Configuring server for port ${PORT}`);
 
-    if (NODE_ENV === "development") {
+    // Temporarily disable Vite integration
+    if (false && NODE_ENV === "development") {
       log("Setting up Vite integration...");
       try {
         await setupVite(app, server);
@@ -71,7 +74,19 @@ app.use((req, res, next) => {
       }
     } else {
       log("Setting up static file serving...");
-      serveStatic(app);
+      // Serve static files from dist/public
+      const __dirname = dirname(fileURLToPath(import.meta.url));
+      const distPath = path.resolve(__dirname, "..", "dist", "public");
+      log(`Serving static files from: ${distPath}`);
+      app.use(express.static(distPath));
+
+      // Serve index.html for all routes except /api
+      app.get("*", (req, res, next) => {
+        if (req.path.startsWith("/api")) {
+          return next();
+        }
+        res.sendFile(path.join(distPath, "index.html"));
+      });
     }
 
     // Start the server
