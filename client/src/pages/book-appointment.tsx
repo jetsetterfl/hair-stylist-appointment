@@ -165,11 +165,11 @@ export default function BookAppointment() {
       const appointmentDate = new Date(selectedDate);
       appointmentDate.setHours(hours, minutes, 0, 0);
 
-      const appointmentData: InsertAppointment = {
+      const appointmentData = {
         stylistId: selectedStylist,
         clientName: data.clientName,
         clientEmail: data.clientEmail,
-        date: appointmentDate, // Now sending as a Date object
+        date: appointmentDate.toISOString(), // Convert to ISO string for consistent date format
         startTime: data.startTime,
         endTime: data.endTime,
       };
