@@ -11,10 +11,10 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    
+
     steps:
     - uses: actions/checkout@v3
-    
+
     - name: Download build artifacts
       uses: actions/cache@v3
       with:
@@ -22,14 +22,13 @@ jobs:
           dist
           node_modules
         key: ${{ runner.os }}-build-${{ github.sha }}
-    
-    # Placeholder for future deployment steps
-    # Add your deployment configuration here
-    # Examples:
-    # - Deploy to Replit
-    # - Deploy to a cloud provider
-    # - Deploy to your own server
-    
+
+    - name: Deploy to Replit
+      uses: replit/replit-deploy@v1
+      with:
+        token: ${{ secrets.REPLIT_TOKEN }}
+        id: ${{ secrets.REPL_ID }}
+
     - name: Notify deployment status
       if: always()
       uses: actions/github-script@v6
@@ -38,7 +37,7 @@ jobs:
           const { owner, repo } = context.repo;
           const run_id = context.runId;
           const conclusion = '${{ job.status }}';
-          
+
           await github.rest.repos.createCommitStatus({
             owner,
             repo,
